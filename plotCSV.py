@@ -14,15 +14,13 @@ import numpy as np
 import scipy.signal
 import pandas as pd
 
-path = '/Users/nils/Desktop/LAAX_Data/NilsPodX-3F7F_20190406_1036.csv'
+path = '/Users/nils/Desktop/LAAX_Data/NilsPodX-3F7F_20190406_1424.csv'
 df = pd.read_csv(path)
 
 f, axarr = plt.subplots(3,sharex=True)
 
 axarr[0].plot(df['baro'].values)
-axarr[1].plot(df['acc_x'].values)
-axarr[1].plot(df['acc_y'].values)
-axarr[1].plot(df['acc_z'].values)
+axarr[1].plot(df[['acc_x','acc_y','acc_z']].values)
 axarr[2].plot(df['gyro_x'].values)
 axarr[2].plot(df['gyro_y'].values)
 axarr[2].plot(df['gyro_z'].values)
