@@ -1,6 +1,5 @@
-from bokeh.io import show
 from bokeh.layouts import gridplot
-from bokeh.models import ColumnDataSource
+from bokeh.models import ColumnDataSource, LabelSet
 from bokeh.plotting import figure
 import numpy as np
 
@@ -73,7 +72,7 @@ def plot_altitude_lifts(altitude, ref_altitudes):
         desc = lift_names
     )
     source = ColumnDataSource(data=dict_altitudes)
-    
+
     p = figure(title="Altitude", x_axis_label="Time", y_axis_label="Altitude [m]", plot_height=800, plot_width=800)
     p.line(range(0,len(altitude)), altitude, legend="Altitude", line_color='green')
     p.line(range(0,len(altitude)), 2228, line_color="grey", line_width=2, legend="LAAX Bridge")
@@ -82,7 +81,7 @@ def plot_altitude_lifts(altitude, ref_altitudes):
         for lift in ref_altitudes:
             p.asterisk(ref_altitudes[lift][1], ref_altitudes[lift][0], size=10, line_width=2)
             labels = LabelSet(x='x', y='y', text='desc', level='glyph', x_offset=5, y_offset=5, source=source, render_mode='canvas', background_fill_color="white", background_fill_alpha=0.8)
-            
+
         p.add_layout(labels)
-        
+
     return p
