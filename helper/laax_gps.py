@@ -76,7 +76,7 @@ def get_gps_track(file_path):
     geo_track = np.array(
         [((p.time - points[0].time).total_seconds(), p.latitude, p.longitude, p.elevation) for p in points])
     track = pd.DataFrame(geo_track, columns=['t', 'la', 'lo', 'el'])
-    track.apply(lambda x: interp1d(track.t, x)(np.arange(track.t.iloc[-1])))
+    track = track.apply(lambda x: interp1d(track.t, x)(np.arange(track.t.iloc[-1])))
     return track
 
 
@@ -97,4 +97,4 @@ def find_closest(p, all_geo):
 
 def find_closest_gps_track(track, all_geo):
     closest = track.apply(lambda x: find_closest((x['la'], x['lo']), all_geo), axis=1)
-    return closest.rolling(60).apply(lambda x: mode(x)[0]).fillna(method='backfill')
+    return closest.rolling(20, center=True).apply(lambda x: mode(x)[0]).fillna(method='backfill')
