@@ -8,7 +8,9 @@ import requests
 from geopy import distance
 
 # The ids for (hopefully all slops in Laax) to query the OpenSnow API with it
+from numpy.linalg import norm
 from scipy.interpolate import interp1d
+from scipy.stats import mode
 
 LAAX_IDS = [132148, 132149, 132151, 132152, 132154, 132155, 132156, 132157, 132158, 132159, 132160, 132161, 132162,
             132164, 132165, 132166, 132167, 132168, 132169, 132170, 132171, 132172, 132173, 132174, 132178, 132179,
@@ -76,3 +78,23 @@ def get_gps_track(file_path):
     track = pd.DataFrame(geo_track, columns=['t', 'la', 'lo', 'el'])
     track.apply(lambda x: interp1d(track.t, x)(np.arange(track.t.iloc[-1])))
     return track
+
+
+def get_geopoints_from_slopes(slopes):
+    all_geo = []
+    for s in slopes.values():
+        for p in s['geo']:
+            all_geo.append((s['id'], p))
+    return all_geo
+
+
+def find_closest(p, all_geo):
+    all_geo_points = np.vstack([p[1] for p in all_geo])
+    diff = all_geo_points - p
+    diff = norm(diff, axis=1)
+    return all_geo[np.argmin(diff)][0]
+
+
+def find_closest_gps_track(track, all_geo):
+    closest = track.apply(lambda x: find_closest((x['la'], x['lo']), all_geo), axis=1)
+    return closest.rolling(60).apply(lambda x: mode(x)[0]).fillna(method='backfill')

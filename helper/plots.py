@@ -1,16 +1,17 @@
 from bokeh.layouts import gridplot
-from bokeh.models import ColumnDataSource, LabelSet
+from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure
 import numpy as np
 
+COLOR_MAP = {
+    'intermediate': 'red',
+    'easy': 'blue',
+    'freeride': 'yellow',
+    'advanced': 'black'
+}
+
 
 def plot_ski_slopes(slopes, color_map=None, show_altitude=True):
-    COLOR_MAP = {
-        'intermediate': 'red',
-        'easy': 'blue',
-        'freeride': 'yellow',
-        'advanced': 'black'
-    }
     color_map = color_map or COLOR_MAP
 
     c_data = dict()
@@ -52,7 +53,7 @@ def plot_gps_track(source, color=None, overlay_onto=None):
         p = figure(plot_width=800, plot_height=800)
     else:
         p = overlay_onto
-    p.line('lo', 'la', source=source, line_width=3, color=color)
+    p.circle('lo', 'la', source=source, line_width=3, color=color)
     return p
 
 
@@ -63,25 +64,3 @@ def plot_gps_altitude_distance(source, color=None):
     return p
 
 
-def plot_altitude_lifts(altitude, ref_altitudes):
-    lift_names = [lift.replace('_', ' ').title() for lift in list(ref_altitudes.keys())]
-
-    dict_altitudes = dict(
-        x = [ el[1] for el in list(ref_altitudes.values())],
-        y = [ el[0] for el in list(ref_altitudes.values())],
-        desc = lift_names
-    )
-    source = ColumnDataSource(data=dict_altitudes)
-
-    p = figure(title="Altitude", x_axis_label="Time", y_axis_label="Altitude [m]", plot_height=800, plot_width=800)
-    p.line(range(0,len(altitude)), altitude, legend="Altitude", line_color='green')
-    p.line(range(0,len(altitude)), 2228, line_color="grey", line_width=2, legend="LAAX Bridge")
-
-    if ref_altitudes:
-        for lift in ref_altitudes:
-            p.asterisk(ref_altitudes[lift][1], ref_altitudes[lift][0], size=10, line_width=2)
-            labels = LabelSet(x='x', y='y', text='desc', level='glyph', x_offset=5, y_offset=5, source=source, render_mode='canvas', background_fill_color="white", background_fill_alpha=0.8)
-
-        p.add_layout(labels)
-
-    return p
