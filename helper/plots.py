@@ -57,7 +57,8 @@ def plot_gps_track(source, color=None, overlay_onto=None):
     return p
 
 
-def plot_gps_altitude(source, color=None):
+def plot_gps_altitude_distance(source, color=None):
+    # TODO distance plot
     p = figure(plot_width=800, plot_height=800)
     p.line('t', 'el', source=source, line_width=3, color=color)
     return p
