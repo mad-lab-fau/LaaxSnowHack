@@ -6,8 +6,9 @@ import tkinter as tk
 from tkinter import filedialog
 import numpy as np
 import scipy.signal
+import pandas as pd
 
-#plt.close('all')
+plt.close('all')
 
 #root = tk.Tk()
 #root.withdraw()
@@ -36,10 +37,15 @@ file_path = '/Users/nils/Desktop/NilsPodX-3F7F_20190405_1346.bin'
 dataset = sensor.Dataset(file_path)
 baro_data = dataset.baro.data #eliminate first few baro samples as they often read wrong values
 baro_data[0:5] = dataset.baro.data[5]
-
-
 gyro_data = dataset.gyro.data
 acc_data = dataset.acc.data
+
+#file_path = '/Users/nils/Desktop/LAAX_Data/NilsPodX-3F7F_20190406_1424.csv'
+#df = pd.read_csv(file_path)
+#baro_data = df['baro'].values
+#baro_data[0:5] = df['baro'].values[5]
+#gyro_data = df[['gyro_x','gyro_y','gyro_z']].values
+#acc_data = df[['acc_x','acc_y','acc_z']].values
 
 #baro_data = baro_data - np.mean(baro_data[0:500])
 
@@ -52,11 +58,14 @@ f.show();
 
 
 baro_smooth = scipy.signal.savgol_filter(baro_data, window_length=1201, polyorder=5)
+
 baro_smooth_avg = movingaverage(baro_smooth,4000);
+
 
 baro_grad = np.gradient(baro_smooth)   
 baro_grad_smooth = movingaverage(baro_grad,5000);
 baro_grad_threshold = np.std(baro_grad_smooth)/10;
+
 
 ride = np.where(baro_grad_smooth > baro_grad_threshold)[0]
 idx_ride = np.where(np.diff(ride) > 1)
@@ -74,6 +83,9 @@ axarr[0].plot(baro_smooth)
 
 axarr[1].plot(baro_grad)
 axarr[1].plot(baro_grad_smooth)
+axarr[1].axhline(y=baro_grad_threshold, color='r', linestyle='--')
+axarr[1].axhline(y=-baro_grad_threshold, color='r', linestyle='--')
+axarr[1].axhline(y=0.0, color='k', linestyle='--')
 
 markArea(axarr[0], 'r', ride, idx_ride)
 markArea(axarr[0], 'b', no_ride, idx_no_ride)
@@ -96,10 +108,13 @@ f.show()
 
 
 
+min_ride_length_seconds = 30
+min_lift_length_seconds = 120
 
 seaLevelhPa = 1013.0
 altitude = millibar2Meter(baro_smooth)
 
+# cut rides from altitude
 rides = list();
 start = ride[idx_ride[0]]
 stop = ride[idx_ride[1]]
@@ -107,9 +122,10 @@ rides.append(altitude[start:stop])
 for i in range(1,len(idx_ride)-2):
     start = ride[idx_ride[i]+1]
     stop = ride[idx_ride[i+1]]
-    if(stop-start > 5*204.8):
+    if(stop-start > min_ride_length_seconds*204.8):
         rides.append(altitude[start:stop])
-        
+
+# cut lift events from altitude
 lifts = list();
 start = no_ride[idx_no_ride[0]]
 stop = no_ride[idx_no_ride[1]]
@@ -117,7 +133,7 @@ lifts.append(altitude[start:stop])
 for i in range(1,len(idx_no_ride)-2):
     start = no_ride[idx_no_ride[i]+1]
     stop = no_ride[idx_no_ride[i+1]]
-    if(stop-start > 180*204.8):
+    if(stop-start > min_lift_length_seconds*204.8):
         lifts.append(altitude[start:stop])
     
 lift_time = 0    
