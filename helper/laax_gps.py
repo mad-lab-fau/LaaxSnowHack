@@ -1,12 +1,13 @@
 import pickle
 from pathlib import Path
 
+import gpxpy
 import numpy as np
+import pandas as pd
 import requests
 from geopy import distance
 
 # The ids for (hopefully all slops in Laax) to query the OpenSnow API with it
-
 LAAX_IDS = [132148, 132149, 132151, 132152, 132154, 132155, 132156, 132157, 132158, 132159, 132160, 132161, 132162,
             132164, 132165, 132166, 132167, 132168, 132169, 132170, 132171, 132172, 132173, 132174, 132178, 132179,
             132180, 132181, 132182, 132183, 132185, 132186, 132187, 132188, 132189, 132198, 132287, 132298, 132300,
@@ -27,7 +28,6 @@ def get_slope_info(lid):
     pair_dist = calc_distance_from_geo_series(data)
 
     elevation = requests.post('https://elevation.racemap.com/api', headers=headers, json=data.tolist()).json()
-
     return_data = dict()
     return_data['name'] = slope['properties']['name']
     return_data['difficulty'] = slope['properties']['piste:difficulty']
@@ -63,3 +63,12 @@ def get_all_laax_slopes(force=False):
             slopes[i] = get_slope_info(i)
 
     pickle.dump(slopes, path.open('wb'))
+    return slopes
+
+
+def get_gps_track(file_path):
+    gpx = gpxpy.parse(open(file_path, 'r'))
+    points = gpx.tracks[0].segments[0].points
+    geo_track = np.array(
+        [((p.time - points[0].time).total_seconds(), p.latitude, p.longitude, p.elevation) for p in points])
+    return pd.DataFrame(geo_track, columns=['t', 'la', 'lo', 'el'])
